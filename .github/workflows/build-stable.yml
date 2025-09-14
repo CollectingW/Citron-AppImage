@@ -1,17 +1,18 @@
-name: Build Citron (Stable)
+name: Build Citron (Nightly)
 concurrency:
-  group: build-stable-${{ github.ref }}
+  group: build-nightly-${{ github.ref }}
   cancel-in-progress: true
 
 on:
   schedule:
-    - cron: "0 7 1/21 * *"
+    - cron: "0 7 1/5 * *"
   workflow_dispatch: {}
 
 jobs:
   build:
     name: "${{ matrix.name }} (${{ matrix.arch }})"
     runs-on: ${{ matrix.runs-on }}
+    timeout-minutes: 60
     strategy:
       matrix:
         include:
@@ -24,70 +25,80 @@ jobs:
             name: "Citron Build (Optimized)"
             arch: x86_64
           - runs-on: ubuntu-24.04-arm
-            name: "Citron build (Normal)"
+            name: "Citron Build (Normal)"
             optimized: false
             arch: aarch64
     container: ghcr.io/pkgforge-dev/archlinux:latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
-      - name: Compile Citron (Normal)
-        if: ${{ matrix.optimized == false }}
-        run: chmod +x ./get-dependencies.sh && ./get-dependencies.sh
+      - name: Install dependencies & Build AppImage
+        run: |
+          chmod +x ./get-dependencies.sh && ./get-dependencies.sh
+          NPROC_VAL=$(nproc --all)
+          JOBS_VAL=$((NPROC_VAL > 2 ? NPROC_VAL / 2 : 1))
+          if ${{ matrix.optimized }}; then
+            JOBS=${JOBS_VAL} DEVEL=true chmod +x ./citron-appimage.sh && JOBS=${JOBS_VAL} DEVEL=true ./citron-appimage.sh v3
+          else
+            JOBS=${JOBS_VAL} DEVEL=true chmod +x ./citron-appimage.sh && JOBS=${JOBS_VAL} DEVEL=true ./citron-appimage.sh
+          fi
+          mkdir -p dist
+          mv *.AppImage* dist/
 
-      - name: Compile Citron (Optimized)
-        if: ${{ matrix.optimized == true }}
-        run: chmod +x ./get-dependencies.sh && ./get-dependencies.sh v3
-
-      - name: Make AppImage (Normal)
-        if: ${{ matrix.optimized == false }}
-        run: chmod +x ./citron-appimage.sh && ./citron-appimage.sh
-
-      - name: Make AppImage (Optimized)
-        if: ${{ matrix.optimized == true }}
-        run: chmod +x ./citron-appimage.sh && ./citron-appimage.sh v3
-
-      - name: Upload artifact
+      - name: Upload AppImage
         uses: actions/upload-artifact@v4.6.2
         with:
           name: AppImage-${{ matrix.optimized && 'optimized' || 'normal' }}-${{ matrix.arch }}
           path: "dist"
 
+      - name: Upload version file
+        if: ${{ matrix.optimized == false && matrix.arch == 'x86_64' }}
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: version
+          path: ~/version
+
   release:
     if: ${{ github.ref_name == 'main' }}
+    name: "release"
     needs: [build]
-    permissions: write-all
+    permissions:
+      actions: read
+      security-events: write
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4.3.0
         with:
           pattern: AppImage-*
           merge-multiple: true
+          path: .
 
-      - name: Read version and Get date
-        run: |
-          cat ./version
-          echo "VERSION=$(cat ./version)" >> "${GITHUB_ENV}"
-          echo "DATE=$(date +'%Y-%m-%d_%s')" >> "${GITHUB_ENV}"
-
-      - name: Release Artifacts
-        uses: softprops/action-gh-release@v2.2.2
+      - uses: actions/download-artifact@v4.3.0
         with:
-          name: "Citron: ${{ env.VERSION }}"
-          tag_name: "${{ env.VERSION }}@${{ env.DATE }}"
-          prerelease: false
+          name: version
+          path: .
+
+      - name: Read version
+        run: |
+          export VERSION="$(cat version)"
+          echo "APP_VERSION=${VERSION}" >> "${GITHUB_ENV}"
+
+      - name: Del Previous Release
+        run: gh release delete "nightly" --repo "${GITHUB_REPOSITORY}" --cleanup-tag -y && sleep 5
+        env:
+          GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        continue-on-error: true
+
+      - uses: softprops/action-gh-release@v2.2.2
+        with:
+          name: "Continuous Build (Nightly Version: ${{ env.APP_VERSION }})"
+          tag_name: "nightly"
+          prerelease: true
           draft: false
           generate_release_notes: false
-          make_latest: true
+          make_latest: false
           files: |
             *.AppImage*
-
-      - uses: actions/checkout@v4
-      - name: Update LATEST_VERSION
-        run: |
-          echo "${{ env.VERSION }}" > ./LATEST_VERSION
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add ./LATEST_VERSION
-          git commit --allow-empty -m 'bump `LATEST_VERSION` [skip ci]'
-          git push

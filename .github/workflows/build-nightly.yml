@@ -25,7 +25,7 @@ jobs:
             name: "Citron Build (Optimized)"
             arch: x86_64
           - runs-on: ubuntu-24.04-arm
-            name: "Citron Build (Normal)"
+            name: "Citron build (Normal)"
             optimized: false
             arch: aarch64
     container: ghcr.io/pkgforge-dev/archlinux:latest
@@ -34,16 +34,25 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install dependencies & Build AppImage
+      - name: Install dependencies
         run: |
           chmod +x ./get-dependencies.sh && ./get-dependencies.sh
-          NPROC_VAL=$(nproc --all)
-          JOBS_VAL=$((NPROC_VAL > 2 ? NPROC_VAL / 2 : 1))
-          if ${{ matrix.optimized }}; then
-            JOBS=${JOBS_VAL} DEVEL=true chmod +x ./citron-appimage.sh && JOBS=${JOBS_VAL} DEVEL=true ./citron-appimage.sh v3
-          else
-            JOBS=${JOBS_VAL} DEVEL=true chmod +x ./citron-appimage.sh && JOBS=${JOBS_VAL} DEVEL=true ./citron-appimage.sh
-          fi
+
+      - name: Build AppImage (Normal)
+        if: ${{ !matrix.optimized }}
+        run: |
+          JOBS_VAL=1
+          JOBS=${JOBS_VAL} DEVEL=true chmod +x ./citron-appimage.sh && JOBS=${JOBS_VAL} DEVEL=true ./citron-appimage.sh
+          mkdir -p dist
+          mv *.AppImage* dist/
+
+      - name: Build AppImage (Optimized)
+        if: ${{ matrix.optimized }}
+        run: |
+          JOBS_VAL=1
+          rm -rf ./AppDir || true
+          sudo pacman -R --noconfirm citron || true
+          JOBS=${JOBS_VAL} DEVEL=true chmod +x ./citron-appimage.sh && JOBS=${JOBS_VAL} DEVEL=true ./citron-appimage.sh v3
           mkdir -p dist
           mv *.AppImage* dist/
 
@@ -54,7 +63,7 @@ jobs:
           path: "dist"
 
       - name: Upload version file
-        if: ${{ matrix.optimized == false && matrix.arch == 'x86_64' }}
+        if: ${{ !matrix.optimized && matrix.arch == 'x86_64' }}
         uses: actions/upload-artifact@v4.6.2
         with:
           name: version

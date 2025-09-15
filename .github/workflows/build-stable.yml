@@ -34,18 +34,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install dependencies & Check Resources
+      - name: Install dependencies
         run: |
           chmod +x ./get-dependencies.sh && ./get-dependencies.sh
-          free -h
-          nproc --all
-          df -h
 
       - name: Build AppImage (Normal)
         if: ${{ !matrix.optimized }}
         run: |
-          NPROC_VAL=$(nproc --all)
-          JOBS_VAL=$((NPROC_VAL > 2 ? NPROC_VAL / 2 : 1))
+          JOBS_VAL=1
           JOBS=${JOBS_VAL} chmod +x ./citron-appimage.sh && JOBS=${JOBS_VAL} ./citron-appimage.sh
           mkdir -p dist
           mv *.AppImage* dist/
@@ -53,8 +49,7 @@ jobs:
       - name: Build AppImage (Optimized)
         if: ${{ matrix.optimized }}
         run: |
-          NPROC_VAL=$(nproc --all)
-          JOBS_VAL=$((NPROC_VAL > 2 ? NPROC_VAL / 2 : 1))
+          JOBS_VAL=1
           rm -rf ./AppDir || true
           sudo pacman -R --noconfirm citron || true
           JOBS=${JOBS_VAL} chmod +x ./citron-appimage.sh && JOBS=${JOBS_VAL} ./citron-appimage.sh v3

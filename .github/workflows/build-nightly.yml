@@ -12,7 +12,6 @@ jobs:
   build:
     name: "${{ matrix.name }} (${{ matrix.arch }})"
     runs-on: ${{ matrix.runs-on }}
-    timeout-minutes: 60
     strategy:
       matrix:
         include:
@@ -25,49 +24,34 @@ jobs:
             name: "Citron Build (Optimized)"
             arch: x86_64
           - runs-on: ubuntu-24.04-arm
-            name: "Citron build (Normal)"
+            name: "Citron Build (Normal)"
             optimized: false
             arch: aarch64
     container: ghcr.io/pkgforge-dev/archlinux:latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
 
-      - name: Install dependencies
-        run: |
-          chmod +x ./get-dependencies.sh && ./get-dependencies.sh
+      - name: Compile Citron (Normal)
+        if: ${{ matrix.optimized == false }}
+        run: chmod +x ./get-dependencies.sh && DEVEL=true ./get-dependencies.sh
 
-      - name: Build AppImage (Normal)
-        if: ${{ !matrix.optimized }}
-        run: |
-          JOBS_VAL=1
-          JOBS=${JOBS_VAL} DEVEL=true chmod +x ./citron-appimage.sh && JOBS=${JOBS_VAL} DEVEL=true ./citron-appimage.sh
-          mkdir -p dist
-          mv *.AppImage* dist/
+      - name: Compile Citron (Optimized)
+        if: ${{ matrix.optimized == true }}
+        run: chmod +x ./get-dependencies.sh && DEVEL=true ./get-dependencies.sh v3
 
-      - name: Build AppImage (Optimized)
-        if: ${{ matrix.optimized }}
-        run: |
-          JOBS_VAL=1
-          rm -rf ./AppDir || true
-          sudo pacman -R --noconfirm citron || true
-          JOBS=${JOBS_VAL} DEVEL=true chmod +x ./citron-appimage.sh && JOBS=${JOBS_VAL} DEVEL=true ./citron-appimage.sh v3
-          mkdir -p dist
-          mv *.AppImage* dist/
+      - name: Make AppImage (Normal)
+        if: ${{ matrix.optimized == false }}
+        run: chmod +x ./citron-appimage.sh && DEVEL=true ./citron-appimage.sh
 
-      - name: Upload AppImage
+      - name: Make AppImage (Optimized)
+        if: ${{ matrix.optimized == true }}
+        run: chmod +x ./citron-appimage.sh && DEVEL=true ./citron-appimage.sh v3
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4.6.2
         with:
           name: AppImage-${{ matrix.optimized && 'optimized' || 'normal' }}-${{ matrix.arch }}
           path: "dist"
-
-      - name: Upload version file
-        if: ${{ !matrix.optimized && matrix.arch == 'x86_64' }}
-        uses: actions/upload-artifact@v4.6.2
-        with:
-          name: version
-          path: ~/version
 
   release:
     if: ${{ github.ref_name == 'main' }}
@@ -83,17 +67,12 @@ jobs:
         with:
           pattern: AppImage-*
           merge-multiple: true
-          path: .
 
-      - uses: actions/download-artifact@v4.3.0
-        with:
-          name: version
-          path: .
-
-      - name: Read version
+      - name: Read version and Get date
         run: |
-          export VERSION="$(cat version)"
-          echo "APP_VERSION=${VERSION}" >> "${GITHUB_ENV}"
+          cat ./version
+          echo "VERSION=$(cat ./version)" >> "${GITHUB_ENV}"
+          echo "DATE=$(date +'%Y-%m-%d_%s')" >> "${GITHUB_ENV}"
 
       - name: Del Previous Release
         run: gh release delete "nightly" --repo "${GITHUB_REPOSITORY}" --cleanup-tag -y && sleep 5
@@ -103,7 +82,7 @@ jobs:
 
       - uses: softprops/action-gh-release@v2.2.2
         with:
-          name: "Continuous Build (Nightly Version: ${{ env.APP_VERSION }})"
+          name: "Continuous Build (Nightly Version: ${{ env.VERSION }})"
           tag_name: "nightly"
           prerelease: true
           draft: false

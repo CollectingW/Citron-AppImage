@@ -12,6 +12,7 @@ jobs:
   build:
     name: "${{ matrix.name }} (${{ matrix.arch }})"
     runs-on: ${{ matrix.runs-on }}
+    timeout-minutes: 60
     strategy:
       matrix:
         include:
@@ -30,44 +31,67 @@ jobs:
     container: ghcr.io/pkgforge-dev/archlinux:latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
-      - name: Compile Citron (Normal)
-        if: ${{ matrix.optimized == false }}
+      - name: Install dependencies
         run: chmod +x ./get-dependencies.sh && ./get-dependencies.sh
 
-      - name: Compile Citron (Optimized)
-        if: ${{ matrix.optimized == true }}
-        run: chmod +x ./get-dependencies.sh && ./get-dependencies.sh v3
+      - name: Build Citron from source
+        run: |
+          NPROC_VAL=$(nproc --all)
+          JOBS_VAL=$((NPROC_VAL > 2 ? NPROC_VAL / 2 : 1))
+          if ${{ matrix.optimized }}; then
+            JOBS=${JOBS_VAL} chmod +x ./build-citron.sh && JOBS=${JOBS_VAL} ./build-citron.sh v3
+          else
+            JOBS=${JOBS_VAL} chmod +x ./build-citron.sh && JOBS=${JOBS_VAL} ./build-citron.sh
+          fi
 
-      - name: Make AppImage (Normal)
-        if: ${{ matrix.optimized == false }}
-        run: chmod +x ./citron-appimage.sh && ./citron-appimage.sh
+      - name: Package AppImage
+        run: |
+          if ${{ matrix.optimized }}; then
+            chmod +x ./package-citron.sh && ./package-citron.sh v3
+          else
+            chmod +x ./package-citron.sh && ./package-citron.sh
+          fi
 
-      - name: Make AppImage (Optimized)
-        if: ${{ matrix.optimized == true }}
-        run: chmod +x ./citron-appimage.sh && ./citron-appimage.sh v3
-
-      - name: Upload artifact
+      - name: Upload AppImage
         uses: actions/upload-artifact@v4.6.2
         with:
           name: AppImage-${{ matrix.optimized && 'optimized' || 'normal' }}-${{ matrix.arch }}
           path: "dist"
 
+      - name: Upload version file
+        if: ${{ !matrix.optimized && matrix.arch == 'x86_64' }}
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: version
+          path: "dist/version"
+
   release:
     if: ${{ github.ref_name == 'main' }}
+    name: "release"
     needs: [build]
-    permissions: write-all
+    permissions:
+      actions: read
+      security-events: write
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4.3.0
         with:
           pattern: AppImage-*
           merge-multiple: true
+          path: .
+
+      - uses: actions/download-artifact@v4.3.0
+        with:
+          name: version
+          path: .
 
       - name: Read version and Get date
         run: |
-          cat ./version
-          echo "VERSION=$(cat ./version)" >> "${GITHUB_ENV}"
+          echo "VERSION=$(cat version)" >> "${GITHUB_ENV}"
           echo "DATE=$(date +'%Y-%m-%d_%s')" >> "${GITHUB_ENV}"
 
       - name: Release Artifacts

@@ -5,15 +5,12 @@ set -ex
 ARCH="${ARCH:-$(uname -m)}"
 
 if [ "$1" = 'v3' ] && [ "$ARCH" = 'x86_64' ]; then
-	echo "Making x86-64-v3 optimized build of citron..."
 	ARCH="${ARCH}_v3"
-	ARCH_FLAGS="-march=x86-64-v3 -O3"
+	ARCH_FLAGS="-march=x86-64-v3 -O3 -USuccess -UNone"
 elif [ "$ARCH" = 'x86_64' ]; then
-	echo "Making x86-64 generic build of citron..."
-	ARCH_FLAGS="-march=x86-64 -mtune=generic -O3"
+	ARCH_FLAGS="-march=x86-64 -mtune=generic -O3 -USuccess -UNone"
 else
-	echo "Making aarch64 build of citron..."
-	ARCH_FLAGS="-march=armv8-a -mtune=generic -O3"
+	ARCH_FLAGS="-march=armv8-a -mtune=generic -O3 -USuccess -UNone"
 fi
 
 git clone --recursive "https://git.citron-emu.org/citron/emulator.git" ./citron && (
@@ -49,11 +46,6 @@ git clone --recursive "https://git.citron-emu.org/citron/emulator.git" ./citron 
 		sed -i '/VK_DRIVER_ID_MESA_AGXV/d' "$VULKAN_UTILITY_FILE"
 		sed -i '/VK_BUFFER_USAGE_2_EXECUTION_GRAPH_SCRATCH_BIT_AMDX/d' "$VULKAN_UTILITY_FILE"
 	fi
-
-    MAIN_CPP_FILE="./src/citron/main.cpp"
-    if [ -f "$MAIN_CPP_FILE" ]; then
-        sed -i 's/#include "applets\/qt_amiibo_settings.h"/#undef Success\n#undef None\n#include "applets\/qt_amiibo_settings.h"/g' "$MAIN_CPP_FILE"
-    fi
 
 	mkdir build
 	cd build

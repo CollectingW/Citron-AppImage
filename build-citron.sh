@@ -48,6 +48,13 @@ if [ -f "$VULKAN_UTILITY_FILE" ]; then
 	sed -i '/VK_BUFFER_USAGE_2_EXECUTION_GRAPH_SCRATCH_BIT_AMDX/d' "$VULKAN_UTILITY_FILE"
 fi
 
+MAIN_CPP_FILE="./src/citron/main.cpp"
+if [ -f "$MAIN_CPP_FILE" ]; then
+    sed -i 's/#include "updater\/updater_dialog.h"/#if 0\n#include "updater\/updater_dialog.h"\n#endif/g' "$MAIN_CPP_FILE"
+    sed -i 's/if (Updater::UpdaterService::HasStagedUpdate(app_dir)) {/if (false) {/g' "$MAIN_CPP_FILE"
+    sed -i '/CheckForUpdatesAutomatically();/d' "$MAIN_CPP_FILE"
+fi
+
 mkdir build
 cd build
 cmake .. -GNinja \

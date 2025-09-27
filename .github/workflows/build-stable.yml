@@ -9,10 +9,13 @@ on:
   workflow_dispatch: {}
 
 jobs:
+  jobs:
   build:
     name: "${{ matrix.name }} (${{ matrix.arch }})"
     runs-on: ${{ matrix.runs-on }}
     timeout-minutes: 60
+    env:
+      CUSTOM_VERSION: "0.7.1"
     strategy:
       matrix:
         include:
@@ -105,6 +108,7 @@ jobs:
           make_latest: true
           files: |
             *.AppImage*
+            *.tar.zst
 
       - uses: actions/checkout@v4
       - name: Update LATEST_VERSION

@@ -1,5 +1,8 @@
 #!/bin/sh
 set -ex
+echo "Restoring full Qt6 package to ensure all files are present for packaging..."
+pacman -S --noconfirm qt6-base
+
 ARCH="${ARCH:-$(uname -m)}"
 if [ "$1" = 'v3' ] && [ "$ARCH" = 'x86_64' ]; then
 	ARCH="${ARCH}_v3"

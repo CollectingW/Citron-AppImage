@@ -20,14 +20,16 @@ chmod +x ./quick-sharun
 ./quick-sharun /usr/bin/citron* /usr/lib/libgamemode.so* /usr/lib/libpulse.so*
 
 echo "Copying Qt resource and translation files..."
-# Create the target directory
+
+# Create the destination directories inside the AppDir
+mkdir -p ./AppDir/usr/lib/qt6
 mkdir -p ./AppDir/usr/share/qt6
 
-# Copy resources from their correct location
-cp -rv /usr/lib/qt6/resources ./AppDir/usr/share/qt6
+# Copy the single Qt resource file to its correct relative path
+cp /usr/lib/qt6/qt.dat ./AppDir/usr/lib/qt6/
 
-# Copy translations from their correct location
-cp -rv /usr/share/qt6/translations ./AppDir/usr/share/qt6
+# Copy the translations directory to its correct relative path
+cp -r /usr/share/qt6/translations ./AppDir/usr/share/qt6/
 
 if [ "$DEVEL" = 'true' ]; then
 	sed -i 's|Name=citron|Name=citron nightly|' ./AppDir/*.desktop

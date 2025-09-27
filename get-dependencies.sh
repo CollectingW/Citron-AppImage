@@ -4,12 +4,11 @@ set -ex
 ARCH="$(uname -m)"
 
 # This command installs all the full, official dependencies needed to build AND package Citron.
-# The package names for httplib and jwt-cpp have been corrected.
 pacman -Syu --noconfirm \
 	base-devel          \
 	boost               \
 	boost-libs          \
-t	catch2              \
+	catch2              \
 	cmake               \
 	curl                \
 	enet                \
@@ -21,8 +20,6 @@ t	catch2              \
 	glslang             \
 	glu                 \
 	hidapi              \
-	httplib             \
-	jwt-cpp             \
 	libdecor            \
 	libvpx              \
 	libxi               \

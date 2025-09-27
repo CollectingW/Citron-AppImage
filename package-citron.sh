@@ -19,39 +19,12 @@ chmod +x ./quick-sharun
 
 ./quick-sharun /usr/bin/citron* /usr/lib/libgamemode.so* /usr/lib/libpulse.so*
 
-echo "--- STARTING DIAGNOSTICS ---"
-set +e # Temporarily disable exit-on-error to ensure all diagnostics run
+echo "Copying Qt translation files..."
 
-echo "--- Verifying package installations ---"
-pacman -Q qt6-base qt6-translations
-
-echo "--- Listing contents of /usr/lib/qt6 ---"
-ls -lR /usr/lib/qt6
-
-echo "--- Listing contents of /usr/share/qt6 ---"
-ls -lR /usr/share/qt6
-
-echo "--- Searching for qt.dat everywhere in /usr ---"
-find /usr -name "qt.dat"
-
-echo "--- Dumping full file list for qt6-base package ---"
-pacman -Ql qt6-base
-
-echo "--- END OF DIAGNOSTICS ---"
-set -e # Re-enable exit-on-error for the rest of the script
-
-echo "Copying Qt resource and translation files..."
-
-echo "Copying Qt resource and translation files..."
-
-# Create the destination directories inside the AppDir
-mkdir -p ./AppDir/usr/lib/qt6
+# Create the destination directory for translations
 mkdir -p ./AppDir/usr/share/qt6
 
-# Copy the single Qt resource file to its correct relative path
-cp /usr/lib/qt6/qt.dat ./AppDir/usr/lib/qt6/
-
-# Copy the translations directory to its correct relative path
+# Copy the translations directory (which exists now) to its correct path
 cp -r /usr/share/qt6/translations ./AppDir/usr/share/qt6/
 
 if [ "$DEVEL" = 'true' ]; then

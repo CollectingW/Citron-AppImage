@@ -62,7 +62,6 @@ echo "---------------------------------------------------------------"
 count=0
 until [ $count -ge 3 ]
 do
-    # Removed qt6-base-mini from this line to ensure the full Qt6 package is used
 	./get-debloated-pkgs.sh --add-mesa llvm-libs-nano opus-nano && break
 	count=$(($count+1))
 	echo "Attempt $count failed. Retrying in 10 seconds..."
@@ -73,3 +72,6 @@ if [ $count -ge 3 ]; then
 	echo "Failed to install debloated packages after 3 attempts."
 	exit 1
 fi
+
+echo "Restoring full Qt6 package..."
+pacman -S --noconfirm qt6-base

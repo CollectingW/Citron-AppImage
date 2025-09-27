@@ -19,18 +19,15 @@ chmod +x ./quick-sharun
 
 ./quick-sharun /usr/bin/citron* /usr/lib/libgamemode.so* /usr/lib/libpulse.so*
 
-echo "Restoring full Qt6 package to make resource files available..."
-pacman -S --noconfirm qt6-base
+echo "Copying Qt resource and translation files..."
+# Create the target directory
+mkdir -p ./AppDir/usr/share/qt6
 
-# Copy Qt resources from the likely new path
-if [ -d "/usr/lib/qt6/resources" ]; then
-    cp -rv /usr/lib/qt6/resources ./AppDir/shared/lib/qt6
-fi
+# Copy resources from their correct location
+cp -rv /usr/lib/qt6/resources ./AppDir/usr/share/qt6
 
-# Copy Qt translations (this path is likely still correct)
-if [ -d "/usr/share/qt6/translations" ]; then
-    cp -rv /usr/share/qt6/translations ./AppDir/shared/lib/qt6
-fi
+# Copy translations from their correct location
+cp -rv /usr/share/qt6/translations ./AppDir/usr/share/qt6
 
 if [ "$DEVEL" = 'true' ]; then
 	sed -i 's|Name=citron|Name=citron nightly|' ./AppDir/*.desktop

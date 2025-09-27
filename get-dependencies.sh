@@ -2,8 +2,8 @@
 
 set -ex
 ARCH="$(uname -m)"
-EXTRA_PACKAGES="https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/refs/heads/main/useful-tools/get-debloated-pkgs.sh"
 
+# This command installs all the full, official dependencies needed to build AND package Citron.
 pacman -Syu --noconfirm \
 	base-devel          \
 	boost               \
@@ -53,29 +53,3 @@ pacman -Syu --noconfirm \
 	xorg-server-xvfb    \
 	zip                 \
 	zsync
-
-echo "Downloading debloated packages script..."
-wget --retry-connrefused --tries=30 "$EXTRA_PACKAGES" -O ./get-debloated-pkgs.sh
-chmod +x ./get-debloated-pkgs.sh
-
-echo "Installing debloated packages..."
-echo "---------------------------------------------------------------"
-
-# Retry loop for the package download script
-count=0
-until [ $count -ge 3 ]
-do
-	./get-debloated-pkgs.sh --add-mesa llvm-libs-nano opus-nano && break
-	count=$(($count+1))
-	echo "Attempt $count failed. Retrying in 10 seconds..."
-	sleep 10
-done
-
-if [ $count -ge 3 ]; then
-	echo "Failed to install debloated packages after 3 attempts."
-	exit 1
-fi
-
-# THE FIX: Forcefully reinstall the full qt6-base package to undo the debloating.
-echo "Restoring full Qt6 package..."
-pacman -S --noconfirm qt6-base

@@ -22,14 +22,19 @@ jobs:
             optimized: false
             name: "Citron build (Normal)"
             arch: x86_64
+            arch_suffix: ""
           - runs-on: ubuntu-latest
             optimized: true
             name: "Citron Build (Optimized)"
             arch: x86_64
-          # - runs-on: ubuntu-24.04-arm
-          #   name: "Citron build (Normal)"
-          #   optimized: false
-          #   arch: aarch64
+            arch_suffix: "_v3"
+          # --- ADDED THIS SECTION FOR AARCH64 ---
+          - runs-on: ubuntu-latest-arm64 # Use the standard GitHub ARM runner
+            optimized: false
+            name: "Citron build (Normal)"
+            arch: aarch64
+            arch_suffix: ""
+
     container: ghcr.io/pkgforge-dev/archlinux:latest
     steps:
       - name: Install Git
@@ -55,11 +60,7 @@ jobs:
 
       - name: Package AppImage
         run: |
-          if ${{ matrix.optimized }}; then
-            DEVEL=true chmod +x ./package-citron.sh && DEVEL=true ./package-citron.sh v3
-          else
-            DEVEL=true chmod +x ./package-citron.sh && DEVEL=true ./package-citron.sh
-          fi
+          ARCH_SUFFIX=${{ matrix.arch_suffix }} DEVEL=true chmod +x ./package-citron.sh && ARCH_SUFFIX=${{ matrix.arch_suffix }} DEVEL=true ./package-citron.sh
 
       - name: Upload AppImage
         uses: actions/upload-artifact@v4.6.2

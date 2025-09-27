@@ -20,12 +20,18 @@ jobs:
             optimized: false
             name: "Citron build (Normal)"
             arch: x86_64
-            arch_suffix: "" # Suffix is empty for normal build
+            arch_suffix: ""
           - runs-on: ubuntu-latest
             optimized: true
             name: "Citron Build (Optimized)"
             arch: x86_64
-            arch_suffix: "_v3" # Suffix is _v3 for optimized build
+            arch_suffix: "_v3"
+          # --- ADDED THIS SECTION FOR AARCH64 ---
+          - runs-on: ubuntu-latest-arm64 # Use the standard GitHub ARM runner
+            optimized: false
+            name: "Citron build (Normal)"
+            arch: aarch64
+            arch_suffix: ""
 
     container: ghcr.io/pkgforge-dev/archlinux:latest
     steps:
@@ -48,7 +54,6 @@ jobs:
 
       - name: Package AppImage
         run: |
-          # Pass the suffix as an environment variable for clarity and reliability
           ARCH_SUFFIX=${{ matrix.arch_suffix }} chmod +x ./package-citron.sh && ARCH_SUFFIX=${{ matrix.arch_suffix }} ./package-citron.sh
 
       - name: Upload AppImage

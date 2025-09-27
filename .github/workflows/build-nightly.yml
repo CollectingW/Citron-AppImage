@@ -33,6 +33,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          submodules: 'recursive' # This line ensures all necessary submodules are checked out.
 
       - name: Install dependencies
         run: chmod +x ./get-dependencies.sh && ./get-dependencies.sh

@@ -1,14 +1,14 @@
 #!/bin/sh
 set -ex
 ARCH="${ARCH:-$(uname -m)}"
-if [ "$1" = 'v3' ] && [ "$ARCH" = 'x86_64' ]; then
-	ARCH="${ARCH}_v3"
-fi
+# Use the ARCH_SUFFIX environment variable passed from the workflow. Default to empty if not set.
+ARCH="${ARCH}${ARCH_SUFFIX:-}"
+
 VERSION="$(cat ~/version)"
 URUNTIME="https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/refs/heads/main/useful-tools/uruntime2appimage.sh"
 SHARUN="https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/refs/heads/main/useful-tools/quick-sharun.sh"
 
-# Define output names for both formats
+# Define output names for both formats. The $ARCH variable will now be "x86_64" or "x86_64_v3"
 export OUTNAME_APPIMAGE=Citron-"$VERSION"-anylinux-"$ARCH".AppImage
 export OUTNAME_TAR=Citron-"$VERSION"-anylinux-"$ARCH".tar.zst
 export DESKTOP=/usr/share/applications/org.citron_emu.citron.desktop

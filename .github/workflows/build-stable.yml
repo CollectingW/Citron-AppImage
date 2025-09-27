@@ -9,13 +9,10 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  jobs:
   build:
     name: "${{ matrix.name }} (${{ matrix.arch }})"
     runs-on: ${{ matrix.runs-on }}
     timeout-minutes: 60
-    env:
-      CUSTOM_VERSION: "0.7.1"
     strategy:
       matrix:
         include:
@@ -106,6 +103,7 @@ jobs:
           draft: false
           generate_release_notes: false
           make_latest: true
+          # FIXED: Added *.tar.zst to upload the archive
           files: |
             *.AppImage*
             *.tar.zst

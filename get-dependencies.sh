@@ -10,9 +10,12 @@ pacman -Syu --noconfirm \
 	boost-libs          \
 	catch2              \
 	cmake               \
+	cpp-httplib         \
+	cpp-jwt             \
 	curl                \
 	enet                \
 	fmt                 \
+	ffmpeg              \
 	gamemode            \
 	gcc                 \
 	git                 \
@@ -73,5 +76,6 @@ if [ $count -ge 3 ]; then
 	exit 1
 fi
 
+# THE FIX: Forcefully reinstall the full qt6-base package to undo the debloating.
 echo "Restoring full Qt6 package..."
 pacman -S --noconfirm qt6-base

@@ -17,17 +17,11 @@ export DEPLOY_PIPEWIRE=1
 wget --retry-connrefused --tries=30 "$SHARUN" -O ./quick-sharun
 chmod +x ./quick-sharun
 
-# Step 1: Run the full sharun script. It will build the AppDir but also
-# remove qt6-base from the system as part of its cleanup.
 ./quick-sharun /usr/bin/citron* /usr/lib/libgamemode.so* /usr/lib/libpulse.so*
 
-# Step 2: Immediately after quick-sharun has run, restore the full qt6-base package.
-# This makes the resource files available for copying again.
 echo "Restoring full Qt6 package to make resource files available..."
 pacman -S --noconfirm qt6-base
 
-# Step 3: Now that the source files have been restored, copy them into the AppDir.
-# This will succeed because both the source and destination now exist and are stable.
 cp -rv /usr/share/qt6/resources ./AppDir/shared/lib/qt6
 cp -rv /usr/share/qt6/translations ./AppDir/shared/lib/qt6
 

@@ -18,13 +18,14 @@ else
 	git checkout "$CITRON_TAG"
 	VERSION="$(echo "$CITRON_TAG" | awk -F'-' '{print $1}')"
 fi
+# Apply compatibility patches for newer Boost versions found in the Arch container
 find . -type f \( -name '*.cpp' -o -name '*.h' \) | xargs sed -i 's/\bboost::asio::io_service\b/boost::asio::io_context/g'
 find . -type f \( -name '*.cpp' -o -name '*.h' \) | xargs sed -i 's/\bboost::asio::io_service::strand\b/boost::asio::strand<boost::asio::io_context::executor_type>/g'
 find . -type f \( -name '*.cpp' -o -name '*.h' \) | xargs sed -i 's|#include *<boost/process/async_pipe.hpp>|#include <boost/process/v1/async_pipe.hpp>|g'
 find . -type f \( -name '*.cpp' -o -name '*.h' \) | xargs sed -i 's/\bboost::process::async_pipe\b/boost::process::v1::async_pipe/g'
+# This patch is likely safe to keep as it may prevent issues on x86 builds
 sed -i '/sse2neon/d' ./src/video_core/CMakeLists.txt
 sed -i '/sse2neon/d' ./src/video_core/CMakeLists.txt
-sed -i '/add_subdirectory(Vulkan-Headers)/d' ./externals/CMakeLists.txt
 mkdir build
 cd build
 cmake .. -GNinja \

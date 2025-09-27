@@ -19,6 +19,29 @@ chmod +x ./quick-sharun
 
 ./quick-sharun /usr/bin/citron* /usr/lib/libgamemode.so* /usr/lib/libpulse.so*
 
+echo "--- STARTING DIAGNOSTICS ---"
+set +e # Temporarily disable exit-on-error to ensure all diagnostics run
+
+echo "--- Verifying package installations ---"
+pacman -Q qt6-base qt6-translations
+
+echo "--- Listing contents of /usr/lib/qt6 ---"
+ls -lR /usr/lib/qt6
+
+echo "--- Listing contents of /usr/share/qt6 ---"
+ls -lR /usr/share/qt6
+
+echo "--- Searching for qt.dat everywhere in /usr ---"
+find /usr -name "qt.dat"
+
+echo "--- Dumping full file list for qt6-base package ---"
+pacman -Ql qt6-base
+
+echo "--- END OF DIAGNOSTICS ---"
+set -e # Re-enable exit-on-error for the rest of the script
+
+echo "Copying Qt resource and translation files..."
+
 echo "Copying Qt resource and translation files..."
 
 # Create the destination directories inside the AppDir

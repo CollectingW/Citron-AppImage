@@ -39,6 +39,7 @@ pacman -Syu --noconfirm \
 	qt6-multimedia      \
 	qt6-tools           \
 	qt6-wayland         \
+	qt6-translations    \
 	sdl2                \
 	unzip               \
 	vulkan-headers      \

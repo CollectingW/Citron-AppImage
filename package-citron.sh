@@ -22,8 +22,15 @@ chmod +x ./quick-sharun
 echo "Restoring full Qt6 package to make resource files available..."
 pacman -S --noconfirm qt6-base
 
-cp -rv /usr/share/qt6/resources ./AppDir/shared/lib/qt6
-cp -rv /usr/share/qt6/translations ./AppDir/shared/lib/qt6
+# Copy Qt resources from the likely new path
+if [ -d "/usr/lib/qt6/resources" ]; then
+    cp -rv /usr/lib/qt6/resources ./AppDir/shared/lib/qt6
+fi
+
+# Copy Qt translations (this path is likely still correct)
+if [ -d "/usr/share/qt6/translations" ]; then
+    cp -rv /usr/share/qt6/translations ./AppDir/shared/lib/qt6
+fi
 
 if [ "$DEVEL" = 'true' ]; then
 	sed -i 's|Name=citron|Name=citron nightly|' ./AppDir/*.desktop

@@ -30,10 +30,13 @@ jobs:
           #   arch: aarch64
     container: ghcr.io/pkgforge-dev/archlinux:latest
     steps:
+      - name: Install Git
+        run: pacman -Sy --noconfirm git
+
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-          submodules: 'recursive' # This line ensures all necessary submodules are checked out.
+          submodules: 'recursive'
 
       - name: Install dependencies
         run: chmod +x ./get-dependencies.sh && ./get-dependencies.sh

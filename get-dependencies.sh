@@ -62,7 +62,8 @@ echo "---------------------------------------------------------------"
 count=0
 until [ $count -ge 3 ]
 do
-	./get-debloated-pkgs.sh --add-mesa qt6-base-mini llvm-libs-nano opus-nano && break
+    # Removed qt6-base-mini from this line to ensure the full Qt6 package is used
+	./get-debloated-pkgs.sh --add-mesa llvm-libs-nano opus-nano && break
 	count=$(($count+1))
 	echo "Attempt $count failed. Retrying in 10 seconds..."
 	sleep 10

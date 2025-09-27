@@ -5,7 +5,7 @@ if [ "$1" = 'v3' ] && [ "$ARCH" = 'x86_64' ]; then
 	ARCH="${ARCH}_v3"
 fi
 VERSION="$(cat ~/version)"
-URUNTIME="https://raw.githubusercontent/pkgforge-dev/Anylinux-AppImages/refs/heads/main/useful-tools/uruntime2appimage.sh"
+URUNTIME="https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/refs/heads/main/useful-tools/uruntime2appimage.sh"
 SHARUN="https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/refs/heads/main/useful-tools/quick-sharun.sh"
 
 # Define output names for both formats

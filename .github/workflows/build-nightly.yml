@@ -28,12 +28,6 @@ jobs:
             name: "Citron Build (Optimized)"
             arch: x86_64
             arch_suffix: "_v3"
-          # --- ADDED THIS SECTION FOR AARCH64 ---
-          - runs-on: ubuntu-latest-arm64 # Use the standard GitHub ARM runner
-            optimized: false
-            name: "Citron build (Normal)"
-            arch: aarch64
-            arch_suffix: ""
 
     container: ghcr.io/pkgforge-dev/archlinux:latest
     steps:
